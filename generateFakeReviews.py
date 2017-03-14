@@ -62,12 +62,12 @@ def create_dataset(window_size):
 
     print(y.shape)
 
-    return len(chars), window_size, X, y, char_indices, indices_char
+    return len(chars),  X, y, char_indices, indices_char
 
-def create_model(input_dimension,input_length,  epoch_num):
+def create_model(input_dimension,  epoch_num):
     print('Create the model')
     model = Sequential()
-    model.add(LSTM(512, input_shape=(input_length,input_dimension), return_sequences=True)) # change version to 2.0.0 input_dim=input_dimension,
+    model.add(LSTM(512, input_shape=(None,input_dimension), return_sequences=True)) # change version to 2.0.0 input_dim=input_dimension,
     model.add(Dropout(0.2))
     model.add(LSTM(512, return_sequences=True))  # - original
     model.add(Dropout(0.2))
@@ -88,7 +88,7 @@ def create_model(input_dimension,input_length,  epoch_num):
 
 def generate_fake_review(input_dimension,model,char_indices,indices_char):
 
-    seed_string = "sushi"
+    seed_string = "sus"
     print("seed string -->", seed_string)
     print('The generated text is:')
     # sys.stdout.write(seed_string)
@@ -104,7 +104,7 @@ def generate_fake_review(input_dimension,model,char_indices,indices_char):
         # print(preds)
 
         next_index = np.argmax(preds[len(seed_string) - 1])
-        print(next_index)
+        #print(next_index)
 
         next_char = indices_char[next_index]
         seed_string = seed_string + next_char
@@ -119,8 +119,8 @@ def generate_fake_review(input_dimension,model,char_indices,indices_char):
 
 if __name__ == '__main__':
 
-    input_dimension, input_length, X, y, char_indices, indices_char = create_dataset(window_size=40)
-    model = create_model(input_dimension,input_length, epoch_num= 10)
+    input_dimension, X, y, char_indices, indices_char = create_dataset(window_size=40)
+    model = create_model(input_dimension, epoch_num= 10)
     generate_fake_review(input_dimension, model, char_indices, indices_char)
 
 
