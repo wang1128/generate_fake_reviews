@@ -1,6 +1,7 @@
 #The basic ideas were from the the article "The Unreasonable Effectiveness of Recurrent Neural Networks"
 # http://karpathy.github.io/2015/05/21/rnn-effectiveness/
 #The program aim to generate fake reviews by analyzing the reviews from Yelp Chanllenge 2016 by using RNN.
+#
 # keras version updated to 2.0.0
 
 from __future__ import print_function
@@ -43,9 +44,7 @@ def create_dataset(window_size):
             sentences.append(reviews[i: i + window_size])
             next_chars.append(reviews[i + 1:i + 1 + window_size])
 
-    print('nb sequences:', len(sentences))
 
-    print('Vectorization...')
     X = np.zeros((len(sentences), window_size, len(chars)), dtype=np.bool)  # 40 row, len(chars) col, one-hot model
     y = np.zeros((len(sentences), window_size, len(chars)), dtype=np.bool)  # y is also a sequence , or  a seq of 1 hot vectors
 
@@ -69,13 +68,13 @@ def create_model(input_dimension,  epoch_num):
     model = Sequential()
     model.add(LSTM(512, input_shape=(None,input_dimension), return_sequences=True)) # change version to 2.0.0 input_dim=input_dimension,
     model.add(Dropout(0.2))
-    model.add(LSTM(512, return_sequences=True))  # - original
+    model.add(LSTM(512, return_sequences=True))
     model.add(Dropout(0.2))
-    model.add(Dense(input_dimension, activation='softmax'))  # len(chars) the results ...
+    model.add(Dense(input_dimension, activation='softmax'))
 
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
     print(model.summary())
-    print('Finish Creating')
+
 
     filepath = "fake_review.hdf5"
     checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')
@@ -91,7 +90,6 @@ def generate_fake_review(input_dimension,model,char_indices,indices_char):
     seed_string = "sus"
     print("seed string -->", seed_string)
     print('The generated text is:')
-    # sys.stdout.write(seed_string)
 
     generateText = seed_string
 
@@ -101,11 +99,8 @@ def generate_fake_review(input_dimension,model,char_indices,indices_char):
             x[0, t, char_indices[char]] = 1.
 
         preds = model.predict(x, verbose=0)[0]
-        # print(preds)
 
         next_index = np.argmax(preds[len(seed_string) - 1])
-        #print(next_index)
-
         next_char = indices_char[next_index]
         seed_string = seed_string + next_char
 
@@ -120,7 +115,7 @@ def generate_fake_review(input_dimension,model,char_indices,indices_char):
 if __name__ == '__main__':
 
     input_dimension, X, y, char_indices, indices_char = create_dataset(window_size=40)
-    model = create_model(input_dimension, epoch_num= 10)
+    model = create_model(input_dimension, epoch_num= 5)
     generate_fake_review(input_dimension, model, char_indices, indices_char)
 
 
