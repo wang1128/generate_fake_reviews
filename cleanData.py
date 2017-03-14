@@ -2,10 +2,7 @@
 
 import json
 import nltk
-import pickle
 import re
-from nltk import word_tokenize
-from nltk.tag import StanfordPOSTagger
 import time
 
 #create reviews about japanese resturants
@@ -72,7 +69,7 @@ def loadData(filePath,bus_cat_dict):
 
 
                     # delete short sentence
-                    if len(nltk.word_tokenize(new_review_sentence)) >= 6:
+                    if len(nltk.word_tokenize(new_review_sentence)) >= 6 and len(new_review_sentence)>50:
 
                         # delete Punctuation like question marks and so on, and leave the underscore
                         del_punc_review_sentence = re.sub('[^A-Za-z_]+', ' ', new_review_sentence)

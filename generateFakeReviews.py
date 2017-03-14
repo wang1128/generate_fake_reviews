@@ -1,6 +1,7 @@
 #The basic ideas were from the the article "The Unreasonable Effectiveness of Recurrent Neural Networks"
 # http://karpathy.github.io/2015/05/21/rnn-effectiveness/
 #The program aim to generate fake reviews by analyzing the reviews from Yelp Chanllenge 2016 by using RNN.
+# keras version updated to 2.0.0
 
 from __future__ import print_function
 
@@ -15,11 +16,12 @@ import string
 
 def create_dataset(window_size):
 
-    text = open('Data/JapaneseR_no_punc.txt').readlines()
-    text2 = open('Data/JapaneseR_no_punc.txt').read()
+    text = open('Data/JapaneseR_with_punc.txt').readlines()
+    text2 = open('Data/JapaneseR_with_punc.txt').read()
     print('corpus length:', len(text))
 
     chars = sorted(list(set(text2)))
+    print(chars)
 
     print('total chars:', len(chars))
     char_indices = dict((c, i) for i, c in enumerate(chars))
@@ -28,7 +30,12 @@ def create_dataset(window_size):
     step = 1
     sentences = []
     next_chars = []
-    z = 0
+    #z = 0
+    #for i in range(0, len(text) - window_size + 1, step):
+    #    sentences.append(text[i: i + window_size])
+    #    next_chars.append(text[i + 1:i + 1 + window_size])
+    #print('nb sequences:', len(sentences))
+
     for reviews in text:
         #In the clean data part, the review length > 40
         for i in range(0, len(reviews) - window_size + 1, step):
@@ -55,28 +62,27 @@ def create_dataset(window_size):
 
     print(y.shape)
 
-    return len(chars), X, y, char_indices, indices_char
+    return len(chars), window_size, X, y, char_indices, indices_char
 
-def create_model(input_dimension, epoch_num):
+def create_model(input_dimension,input_length,  epoch_num):
     print('Create the model')
     model = Sequential()
-    model.add(LSTM(512, input_dim=input_dimension, return_sequences=True))
+    model.add(LSTM(512, input_shape=(input_length,input_dimension), return_sequences=True)) # change version to 2.0.0 input_dim=input_dimension,
     model.add(Dropout(0.2))
     model.add(LSTM(512, return_sequences=True))  # - original
     model.add(Dropout(0.2))
     model.add(Dense(input_dimension, activation='softmax'))  # len(chars) the results ...
 
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
-
+    print(model.summary())
     print('Finish Creating')
-
-    #print(model.summary())
 
     filepath = "fake_review.hdf5"
     checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')
     callbacks_list = [checkpoint]
 
-    model.fit(X, y, nb_epoch=epoch_num, batch_size=128, callbacks=callbacks_list)
+    model.fit(X, y, epochs=epoch_num, batch_size=128, callbacks=callbacks_list)
+
 
     return model
 
@@ -113,8 +119,8 @@ def generate_fake_review(input_dimension,model,char_indices,indices_char):
 
 if __name__ == '__main__':
 
-    input_dimension, X, y, char_indices, indices_char = create_dataset(window_size=40)
-    model = create_model(input_dimension, epoch_num= 10)
+    input_dimension, input_length, X, y, char_indices, indices_char = create_dataset(window_size=40)
+    model = create_model(input_dimension,input_length, epoch_num= 10)
     generate_fake_review(input_dimension, model, char_indices, indices_char)
 
 
