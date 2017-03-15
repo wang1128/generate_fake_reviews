@@ -1,7 +1,6 @@
 #The basic ideas were from the the article "The Unreasonable Effectiveness of Recurrent Neural Networks"
 # http://karpathy.github.io/2015/05/21/rnn-effectiveness/
 #The program aim to generate fake reviews by analyzing the reviews from Yelp Chanllenge 2016 by using RNN.
-#
 # keras version updated to 2.0.0
 
 from __future__ import print_function
@@ -11,9 +10,7 @@ from keras.callbacks import ModelCheckpoint
 from keras.layers import Dense, Dropout
 from keras.layers import LSTM
 from keras.models import Sequential
-
-import string
-
+from keras.models import load_model
 
 def create_dataset(window_size):
 
@@ -85,38 +82,49 @@ def create_model(input_dimension,  epoch_num):
 
     return model
 
-def generate_fake_review(input_dimension,model,char_indices,indices_char):
+def generate_fake_review(seed_str, input_dimension,model,char_indices,indices_char,sentence_num):
 
-    seed_string = "sus"
-    print("seed string -->", seed_string)
+
+    print("seed string -->", seed_str)
     print('The generated text is:')
 
-    generateText = seed_string
+    generateText = seed_str
 
-    for i in range(1000):
-        x = np.zeros((1, len(seed_string), input_dimension))
-        for t, char in enumerate(seed_string):
+    for i in range(10000):
+        # generate sentence_num sentences
+        if generateText.count('.')> sentence_num:
+            break
+
+        x = np.zeros((1, len(seed_str), input_dimension))
+        for t, char in enumerate(seed_str):
             x[0, t, char_indices[char]] = 1.
 
         preds = model.predict(x, verbose=0)[0]
 
-        next_index = np.argmax(preds[len(seed_string) - 1])
+
+        next_index = np.argmax(preds[len(seed_str) - 1])
         next_char = indices_char[next_index]
-        seed_string = seed_string + next_char
+        seed_str = seed_str + next_char
 
         generateText = generateText + next_char
 
-    print(generateText)
+        if i % 100 == 0:
+            print(i/100)
 
-    text_file = open("Output.txt", "w")
-    text_file.write("GenerateText :  %s" % generateText)
-    text_file.close()
+    print(generateText)
+    return generateText
+
 
 if __name__ == '__main__':
 
     input_dimension, X, y, char_indices, indices_char = create_dataset(window_size=40)
-    model = create_model(input_dimension, epoch_num= 5)
-    generate_fake_review(input_dimension, model, char_indices, indices_char)
+    #model = create_model(input_dimension, epoch_num= 5)
+    model = load_model('fake_review.hdf5')
+    fake_text = generate_fake_review('i love the sushi',input_dimension, model, char_indices, indices_char, 10)
+
+    text_file = open("Output.txt", "w")
+    text_file.write("GenerateText : \n  %s" % fake_text)
+    text_file.close()
 
 
 
